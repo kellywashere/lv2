@@ -11,7 +11,7 @@ XARGS=xargs
 SED=sed
 MV=mv
 
-all: rvdbTremolo rvdbDelay
+all: rvdbTremolo rvdbDelay rvdbReverseDelay
 
 .PHONY: rvdbTremolo
 rvdbTremolo:
@@ -29,9 +29,18 @@ rvdbDelay:
 	$(CP) $@/$@.ttl $(DESTDIR)/$@.lv2/
 	$(CP) $@/manifest.ttl $(DESTDIR)/$@.lv2/
 
+.PHONY: rvdbReverseDelay
+rvdbReverseDelay:
+	$(MD) $(DESTDIR)/$@.lv2
+	$(CC) $(CC_FLAGS) $@/$@.c -o $@/$@.so
+	$(CP) $@/$@.so $(DESTDIR)/$@.lv2/
+	$(CP) $@/$@.ttl $(DESTDIR)/$@.lv2/
+	$(CP) $@/manifest.ttl $(DESTDIR)/$@.lv2/
+
 .PHONY: clean
 clean:
 	$(RM) rvdbTremolo/rvdbTremolo.so
 	$(RM) rvdbDelay/rvdbDelay.so
+	$(RM) rvdbReverseDelay/rvdbReverseDelay.so
 
 
