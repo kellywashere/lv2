@@ -16,7 +16,7 @@ XARGS         := xargs
 SED           := sed
 MV            := mv
 
-ALL           := rvdbTremolo rvdbDelay rvdbReverseDelay rvdbLPF1
+ALL           := rvdbTremolo rvdbDelay rvdbReverseDelay rvdbLPF1 rvdbHPF1
 
 all: $(ALL)
 
@@ -32,6 +32,9 @@ rvdbDelay: rvdbReverseDelay/rvdbReverseDelay.so
 .PHONY: rvdbLPF1
 rvdbLPF1: rvdbLPF1/rvdbLPF1.so
 
+.PHONY: rvdbHPF1
+rvdbHPF1: rvdbHPF1/rvdbHPF1.so
+
 %.so: %.c util/libutil.a
 	$(eval PLUGNAME=$(subst /,,$(dir $@)))
 	@echo "--- Compiling $(PLUGNAME) ---"
@@ -43,7 +46,7 @@ rvdbLPF1: rvdbLPF1/rvdbLPF1.so
 	$(CP) $(PLUGNAME)/$(PLUGNAME).ttl $(DESTDIR)/$(PLUGNAME).lv2/
 	$(CP) $(PLUGNAME)/manifest.ttl $(DESTDIR)/$(PLUGNAME).lv2/
 
-util/libutil.a: util/ringbuffer.o util/lpf1.o
+util/libutil.a: util/ringbuffer.o util/lpf1.o util/hpf1.o
 	@echo "--- creating libutil.a ---"
 	$(AR) $@ $^
 
