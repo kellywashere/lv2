@@ -16,7 +16,9 @@ XARGS         := xargs
 SED           := sed
 MV            := mv
 
-all: rvdbTremolo rvdbDelay rvdbReverseDelay
+ALL           := rvdbTremolo rvdbDelay rvdbReverseDelay rvdbLPF1
+
+all: $(ALL)
 
 .PHONY: rvdbTremolo
 rvdbTremolo: rvdbTremolo/rvdbTremolo.so
@@ -26,6 +28,9 @@ rvdbDelay: rvdbDelay/rvdbDelay.so
 
 .PHONY: rvdbReverseDelay
 rvdbDelay: rvdbReverseDelay/rvdbReverseDelay.so
+
+.PHONY: rvdbLPF1
+rvdbLPF1: rvdbLPF1/rvdbLPF1.so
 
 %.so: %.c util/libutil.a
 	$(eval PLUGNAME=$(subst /,,$(dir $@)))
@@ -38,7 +43,7 @@ rvdbDelay: rvdbReverseDelay/rvdbReverseDelay.so
 	$(CP) $(PLUGNAME)/$(PLUGNAME).ttl $(DESTDIR)/$(PLUGNAME).lv2/
 	$(CP) $(PLUGNAME)/manifest.ttl $(DESTDIR)/$(PLUGNAME).lv2/
 
-util/libutil.a: util/ringbuffer.o
+util/libutil.a: util/ringbuffer.o util/lpf1.o
 	@echo "--- creating libutil.a ---"
 	$(AR) $@ $^
 
@@ -48,11 +53,8 @@ util/%.o: util/%.c
 
 .PHONY: clean
 clean:
-	$(RM) util/*.o
-	$(RM) util/libutil.a
-	$(RM) rvdbTremolo/rvdbTremolo.so
-	$(RM) rvdbDelay/rvdbDelay.so
-	$(RM) rvdbReverseDelay/rvdbReverseDelay.so
+	$(RM) util/*.o util/libutil.a
+	echo $(ALL) | xargs -n 1 echo | xargs -I@ rm -f @/@.so @/@.o
 
 # Convenience functions
 .PHONY: listlv2
