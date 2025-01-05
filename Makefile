@@ -1,49 +1,45 @@
 DESTDIR=~/.lv2
 
-CC=gcc
-CC_FLAGS=-fvisibility=hidden -fPIC -pthread -O2
-CC_FLAGS_LV2=-fvisibility=hidden -fPIC -pthread -O2 `pkg-config --cflags lv2`
-LD_FLAGS_LV2=-Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed -lm `pkg-config --libs lv2`
-CP=cp
-RM=rm -f
-MD=mkdir -p
-CD=cd
-GREP=grep
-XARGS=xargs
-SED=sed
-MV=mv
+CC            := gcc
+LD            := ld
+CC_FLAGS_UTIL := -fvisibility=hidden -fPIC -pthread -O2
+CC_FLAGS_LV2  := -fvisibility=hidden -fPIC -pthread -O2 `pkg-config --cflags lv2`
+# LD_FLAGS_LV2  := -Bstatic -Bdynamic --as-needed -lm `pkg-config --libs lv2`
+LD_FLAGS_LV2  := --as-needed -lm `pkg-config --libs lv2`
+CP            := cp
+RM            := rm -f
+MD            := mkdir -p
+CD            := cd
+GREP          := grep
+XARGS         := xargs
+SED           := sed
+MV            := mv
 
 all: rvdbTremolo rvdbDelay rvdbReverseDelay
 
-util/ringbuffer.o: util/ringbuffer.c
-	$(CC) -c $(CC_FLAGS) util/ringbuffer.c -o $@
-
 .PHONY: rvdbTremolo
-rvdbTremolo:
-	$(MD) $(DESTDIR)/$@.lv2
-	$(CC) -c $(CC_FLAGS_LV2) $@/$@.c -o $@/$@.o
-	$(CC) -shared -o $@/$@.so $(LD_FLAGS_LV2) $@/$@.o
-	$(CP) $@/$@.so $(DESTDIR)/$@.lv2/
-	$(CP) $@/$@.ttl $(DESTDIR)/$@.lv2/
-	$(CP) $@/manifest.ttl $(DESTDIR)/$@.lv2/
+rvdbTremolo: rvdbTremolo/rvdbTremolo.so
 
 .PHONY: rvdbDelay
-rvdbDelay: util/ringbuffer.o
-	$(MD) $(DESTDIR)/$@.lv2
-	$(CC) -c $(CC_FLAGS_LV2) $@/$@.c -o $@/$@.o
-	$(CC) -shared -o $@/$@.so $(LD_FLAGS_LV2) $@/$@.o util/ringbuffer.o
-	$(CP) $@/$@.so $(DESTDIR)/$@.lv2/
-	$(CP) $@/$@.ttl $(DESTDIR)/$@.lv2/
-	$(CP) $@/manifest.ttl $(DESTDIR)/$@.lv2/
+rvdbDelay: rvdbDelay/rvdbDelay.so
 
 .PHONY: rvdbReverseDelay
-rvdbReverseDelay: util/ringbuffer.o
-	$(MD) $(DESTDIR)/$@.lv2
-	$(CC) -c $(CC_FLAGS_LV2) $@/$@.c -o $@/$@.o
-	$(CC) -shared -o $@/$@.so $(LD_FLAGS_LV2) $@/$@.o util/ringbuffer.o
-	$(CP) $@/$@.so $(DESTDIR)/$@.lv2/
-	$(CP) $@/$@.ttl $(DESTDIR)/$@.lv2/
-	$(CP) $@/manifest.ttl $(DESTDIR)/$@.lv2/
+rvdbDelay: rvdbReverseDelay/rvdbReverseDelay.so
+
+%.so: %.c util/ringbuffer.o
+	$(eval PLUGNAME=$(subst /,,$(dir $@)))
+	@echo "--- Compiling $(PLUGNAME) ---"
+	$(MD) $(DESTDIR)/$(PLUGNAME).lv2
+	$(CC) -c $(CC_FLAGS_LV2) $(PLUGNAME)/$(PLUGNAME).c -o $(PLUGNAME)/$(PLUGNAME).o
+	$(LD) -shared -o $(PLUGNAME)/$(PLUGNAME).so $(LD_FLAGS_LV2) $(PLUGNAME)/$(PLUGNAME).o util/ringbuffer.o
+	@echo "--- Copying to $(DESTDIR)/$(PLUGNAME)/ ---"
+	$(CP) $(PLUGNAME)/$(PLUGNAME).so $(DESTDIR)/$(PLUGNAME).lv2/
+	$(CP) $(PLUGNAME)/$(PLUGNAME).ttl $(DESTDIR)/$(PLUGNAME).lv2/
+	$(CP) $(PLUGNAME)/manifest.ttl $(DESTDIR)/$(PLUGNAME).lv2/
+
+util/%.o: util/%.c
+	@echo "--- Compiling $< ---"
+	$(CC) -c $(CC_FLAGS_UTIL) $< -o $@
 
 .PHONY: clean
 clean:
@@ -52,4 +48,15 @@ clean:
 	$(RM) rvdbDelay/rvdbDelay.so
 	$(RM) rvdbReverseDelay/rvdbReverseDelay.so
 
+# Convenience functions
+.PHONY: listlv2
+listlv2:
+	@lv2ls | $(GREP) kellywashere
+
+.PHONY: runlv2-%
+runlv2-%:
+	$(eval PLUGNAME=$(subst runlv2-,,$@))
+	$(eval PLUGFOUND=$(shell lv2ls | grep $(PLUGNAME)))
+	@echo "Starting plugin $(PLUGFOUND)"
+	jalv.gtk3 $(PLUGFOUND)
 
