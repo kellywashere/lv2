@@ -2,12 +2,19 @@
 @prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix doap:   <http://usefulinc.com/ns/doap#> .
+@prefix foaf:   <http://xmlns.com/foaf/0.1/> .
 @prefix units:  <http://lv2plug.in/ns/extensions/units#> .
 @prefix pprops: <http://lv2plug.in/ns/ext/port-props#> .
 
-<https://github.com/kellywashere/lv2/rvdbLPF1> a lv2:Plugin , lv2:AmplifierPlugin , doap:Project ;
+<https://github.com/kellywashere#me>
+	a foaf:Person ;
+	foaf:name "Kelly was Here" ;
+	foaf:homepage <ttps://github.com/kellywashere/> .
+
+<https://github.com/kellywashere/lv2/rvdbLPF1> a lv2:Plugin , lv2:LowpassPlugin , doap:Project ;
     lv2:binary <rvdbLPF1.so> ;
     doap:name "rvdbLPF1" ;
+    doap:maintainer <https://github.com/kellywashere#me> ;
     lv2:optionalFeature lv2:hardRTCapable ;
     
     lv2:port 
